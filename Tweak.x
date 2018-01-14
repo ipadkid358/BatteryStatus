@@ -16,6 +16,13 @@
 - (int)batteryLevel;
 @end
 
+// iOS 3 - 11
+@interface SBBluetoothController : NSObject
++ (instancetype)sharedInstance;
+- (void)updateBattery;
+@end
+
+
 %hook BluetoothDevice
 
 - (int)batteryLevel {
@@ -29,6 +36,19 @@
 
 - (BOOL)supportsBatteryLevel {
     return (self.batteryLevel != -1);
+}
+
+%end
+
+%hook BCBatteryDevice
+
+- (void)setPercentCharge:(long long)charge {
+    %orig;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        SBBluetoothController *bluetoothController = [objc_getClass("SBBluetoothController") sharedInstance];
+        [bluetoothController updateBattery];
+    });
 }
 
 %end
