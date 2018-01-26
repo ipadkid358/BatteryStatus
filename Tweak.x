@@ -26,24 +26,32 @@
 %hook BluetoothDevice
 
 - (int)batteryLevel {
+    NSString *thisAddress = self.address;
     for (BCBatteryDevice *targ in BCBatteryDeviceController.sharedInstance.connectedDevices) {
-        if ([targ.matchIdentifier isEqualToString:self.address]) {
+        if ([targ.matchIdentifier isEqualToString:thisAddress]) {
             return targ.percentCharge;
         }
     }
-    return -1;
+    
+    return %orig;
 }
 
 - (BOOL)supportsBatteryLevel {
-    return (self.batteryLevel != -1);
+    int charge = self.batteryLevel;
+    return !((charge < 0) || (charge > 100));
 }
 
 %end
+
 
 %hook BCBatteryDevice
 
 - (void)setPercentCharge:(long long)charge {
     %orig;
+    
+    if ((charge < 0) || (charge > 100)) {
+        return;
+    }
     
     dispatch_async(dispatch_get_main_queue(), ^{
         SBBluetoothController *bluetoothController = [objc_getClass("SBBluetoothController") sharedInstance];
