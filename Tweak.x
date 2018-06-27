@@ -37,8 +37,7 @@
 }
 
 - (BOOL)supportsBatteryLevel {
-    int charge = self.batteryLevel;
-    return !((charge < 0) || (charge > 100));
+    return (self.batteryLevel != -1);
 }
 
 %end
@@ -48,10 +47,6 @@
 
 - (void)setPercentCharge:(long long)charge {
     %orig;
-    
-    if ((charge < 0) || (charge > 100)) {
-        return;
-    }
     
     dispatch_async(dispatch_get_main_queue(), ^{
         SBBluetoothController *bluetoothController = [objc_getClass("SBBluetoothController") sharedInstance];
